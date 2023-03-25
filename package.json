@@ -27,9 +27,9 @@
     "homebridge-plugin"
   ],
   "dependencies": {
+    "async-await-queue": ">=1.1.1",
     "async-lock": "^1.2.4",
-    "axios": "^0.21.0",
-    "async-await-queue": ">=1.1.1"
+    "axios": "^0.21.0"
   },
   "devDependencies": {
     "@types/node": "^14.14.2",
