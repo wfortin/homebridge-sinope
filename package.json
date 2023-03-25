@@ -2,15 +2,15 @@
   "private": false,
   "displayName": "Homebridge Sinope",
   "name": "homebridge-sinope",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "description": "Unofficial API for Sinope thermostats",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/palourde/homebridge-sinope.git"
+    "url": "git://github.com/frobichaud/homebridge-sinope.git"
   },
   "bugs": {
-    "url": "https://github.com/palourde/homebridge-sinope/issues"
+    "url": "https://github.com/frobichaud/homebridge-sinope/issues"
   },
   "engines": {
     "node": ">=10.17.0",
