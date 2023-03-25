@@ -3,7 +3,7 @@ import { NeviwebRestClient } from './rest-client';
 import { SinopePlatformConfig } from './config';
 import { SinopeDevice, SinopeThermostatState, SinopeThermostatStateRequest, SinopeSwitchState, SinopeSwitchStateRequest, 
   SinopeDimmerState, SinopeDimmerStateRequest } from './types';
-import Queue from 'async-await-queue';
+import { Queue } from 'async-await-queue';
 
 const myPriority = -1;
 
