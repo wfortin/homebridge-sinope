@@ -1,6 +1,6 @@
 import { Logger } from 'homebridge';
 import axios from 'axios';
-import { AxiosRequestConfig, AxiosError } from 'axios';
+import { AxiosRequestConfig } from 'axios';
 import { SinopePlatformConfig } from './config';
 import AsyncLock from 'async-lock';
 
@@ -44,8 +44,8 @@ export class NeviwebRestClient {
       this.refresh = response.data.refreshToken;
       this.connected = true;
       return true;
-    } catch(error: any) {
-      if (error.code) {
+    } catch(error: unknown) {
+      if (axios.isAxiosError(error)) {
         switch(error.code) {
           case 'ACCSESSEXC': {
             this.log.error('too many session open on the neviweb API, please retry in 10 minutes');
@@ -94,8 +94,8 @@ export class NeviwebRestClient {
       this.log.debug('successfully renewed the neviweb session');
 
       return true;
-    } catch(error: any) {
-      if (error.code) {
+    } catch(error: unknown) {
+      if (axios.isAxiosError(error)) {
         switch(error.code) {
           case 'ACCSESSEXC': {
             this.log.error('too many session open on the neviweb API, please retry in 10 minutes');
