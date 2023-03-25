@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "Sinope",
+  "pluginAlias": "sinope-devices",
   "pluginType": "platform",
   "singular": true,
   "schema": {
@@ -28,7 +28,7 @@
         "title": "Location ID",
         "description": "Optional Location ID shown on neviweb website locations/number",
         "type": "string",
-        "required": true,
+        "required": false,
         "default": ""
       }
     }
