@@ -1,7 +1,7 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { SinopeThermostatAccessory, SinopeSwitchAccessory, SinopeDimmerAccessory } from './platformAccessory';
+import { SinopeThermostatAccessory, SinopeSwitchAccessory, SinopeOutletAccessory, SinopeDimmerAccessory } from './platformAccessory';
 // import { SinopeDevice } from './types';
 import { SinopePlatformConfig } from './config';
 import { NeviwebApi } from './neviweb';
@@ -81,7 +81,8 @@ export class SinopePlatform implements DynamicPlatformPlugin {
     // looking at the parentDevice$id field
     const thermostats = devices.filter(device => device.sku.substring(0, 2) === 'TH');
     const dimmers = devices.filter(device => device.sku.substring(0, 2) === 'DM');
-    const switchesregex = new RegExp('^SW|^SP|^RM', 'g');
+    const outlets = devices.filter(device => device.sku.substring(0, 2) === 'SP');
+    const switchesregex = new RegExp('^SW|^RM', 'g');
     const switches = devices.filter(device => { 
       return device.sku.match(switchesregex); 
     } );
@@ -185,6 +186,58 @@ export class SinopePlatform implements DynamicPlatformPlugin {
         // create the accessory handler for the newly create accessory
         // this is imported from `platformAccessory.ts`
         new SinopeSwitchAccessory(this, accessory, aswitch);
+
+        // link the accessory to your platform
+        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+      }
+    }
+
+    for (const outlet of outlets) {
+
+      // generate a unique id for the accessory this should be generated from
+      // something globally unique, but constant, for example, the device serial
+      // number or MAC address
+      const uuid = this.api.hap.uuid.generate(outlet.identifier);
+
+      // see if an accessory with the same uuid has already been registered and restored from
+      // the cached devices we stored in the `configureAccessory` method above
+      const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+
+      if (existingAccessory) {
+        // the accessory already exists
+        if (outlet) {
+          this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
+
+          // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
+          // existingAccessory.context.device = device;
+          // this.api.updatePlatformAccessories([existingAccessory]);
+
+          // create the accessory handler for the restored accessory
+          // this is imported from `platformAccessory.ts`
+          new SinopeOutletAccessory(this, existingAccessory, outlet);
+          
+          // update accessory cache with any changes to the accessory details and information
+          this.api.updatePlatformAccessories([existingAccessory]);
+        } else if (!outlet) {
+          // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
+          // remove platform accessories when no longer present
+          this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory]);
+          this.log.info('Removing existing accessory from cache:', existingAccessory.displayName);
+        }
+      } else {
+        // the accessory does not yet exist, so we need to create it
+        this.log.info('Adding new accessory:', outlet.name);
+
+        // create a new accessory
+        const accessory = new this.api.platformAccessory(outlet.name, uuid);
+
+        // store a copy of the device object in the `accessory.context`
+        // the `context` property can be used to store any data about the accessory you may need
+        accessory.context.device = outlet;
+
+        // create the accessory handler for the newly create accessory
+        // this is imported from `platformAccessory.ts`
+        new SinopeSwitchAccessory(this, accessory, outlet);
 
         // link the accessory to your platform
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);

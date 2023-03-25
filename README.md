@@ -22,7 +22,7 @@ RM Series Load Controllers
 
 Install the plugin:
 ```
-sudo npm install -g homebridge-sinope
+sudo npm install -g homebridge-sinope-devices
 ```
 
 ## Configuration

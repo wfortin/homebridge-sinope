@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "sinope-devices",
+  "pluginAlias": "Sinope",
   "pluginType": "platform",
   "singular": true,
   "schema": {

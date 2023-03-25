@@ -386,6 +386,125 @@ export class SinopeSwitchAccessory {
     return timestamp > this.currentEpoch() && timestamp !== undefined;
   }
 }
+
+export class SinopeOutletAccessory {
+  private service: Service;
+  private state = new StateSwitch();
+
+  constructor(
+    private readonly platform: SinopePlatform,
+    private readonly accessory: PlatformAccessory,
+    private readonly device: SinopeDevice,
+  ) {
+
+    // set accessory information
+    this.accessory.getService(this.platform.Service.AccessoryInformation)!
+      .setCharacteristic(this.platform.Characteristic.Manufacturer, this.device.vendor)
+      .setCharacteristic(this.platform.Characteristic.Model, this.device.sku)
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, this.device.identifier);
+
+    // create a new Outlet service
+    this.service = this.accessory.addService(this.platform.Service.Outlet);
+
+    // set the service name, this is what is displayed as the default name on the Home app
+    // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
+    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
+
+    // create handlers for required characteristics
+    this.service.getCharacteristic(this.platform.Characteristic.On)
+      .on('get', this.handleOnGet.bind(this))
+      .on('set', this.handleOnSet.bind(this));
+
+    this.updateState();
+
+    setInterval(() => {
+      this.updateState();
+    }, 360 * 1000);
+  }
+
+  /**
+   * Handle requests to get the current value of the "On" characteristic
+   */
+  async handleOnGet(callback: CharacteristicGetCallback) {
+    this.platform.log.debug('Triggered GET On');
+    const state = await this.getState();
+    callback(null, state.onOff);
+  }
+
+  /**
+   * Handle requests to set the "On" characteristic
+   */
+  async handleOnSet(value: CharacteristicValue, callback: CharacteristicSetCallback) {
+    this.platform.log.debug('Triggered SET On:' + value);
+
+    // not needed
+    // const state = await this.getState();
+    const on = Number(value);
+    let onOff = '';
+
+    if (on === 0) {
+      onOff = 'off';
+    } else if (on !== 0) {
+      onOff = 'on';
+    } else {
+      callback(null);
+      return;
+    }
+
+    const body: SinopeSwitchStateRequest = {onOff: onOff};
+    try {
+      await this.platform.neviweb.updateSwitch(this.device.id, body);
+      this.platform.log.debug('updated device %s with On %d', this.device.name, value);
+    } catch(error) {
+      this.platform.log.error('could not update On of device %s', this.device.name);
+    }
+
+    callback(null);
+  }
+
+  private async getState(): Promise<StateSwitch> {
+    return await this.state.lock.acquire(STATE_KEY, async () => {
+      if (!this.isValid(this.state.validUntil)) {
+        this.platform.log.debug('updating state for accessory %s', this.device.name);
+        await this.updateState();
+      } else {
+        this.platform.log.debug('state is still valid for accessory %s', this.device.name);
+      }
+      return this.state;
+    });
+  }
+
+  private async updateState() {
+    let deviceState: SinopeSwitchState;
+    try {
+      deviceState = await this.platform.neviweb.fetchSwitch(this.device.id);
+      this.platform.log.debug('fetched update for device %s from Neviweb API: %s', this.device.name, JSON.stringify(deviceState));
+
+      this.state.validUntil = this.currentEpoch() + 1;
+
+      if (deviceState.onOff === 'on') {
+        this.state.onOff = 1;
+      } else {
+        this.state.onOff = 0;
+      }
+      this.service.updateCharacteristic(
+        this.platform.Characteristic.On,
+        this.state.onOff,
+      );
+
+    } catch(error) {
+      this.platform.log.error('could not fetch update for device %s from Neviweb API', this.device.name);
+    }
+  }
+
+  private currentEpoch(): number {
+    return Math.ceil((new Date()).getTime() / 1000);
+  }
+
+  private isValid(timestamp: number): boolean {
+    return timestamp > this.currentEpoch() && timestamp !== undefined;
+  }
+}
 export class SinopeDimmerAccessory {
   private service: Service;
   private state = new StateDimmer();
