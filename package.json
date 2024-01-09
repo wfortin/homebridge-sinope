@@ -1,8 +1,8 @@
 {
   "private": false,
   "displayName": "Homebridge Sinope",
-  "name": "homebridge-sinope-devices",
-  "version": "1.0.3",
+  "name": "@wfortin/homebridge-sinope",
+  "version": "1.0.4",
   "description": "Unofficial API for Sinope thermostats",
   "license": "MIT",
   "repository": {
